@@ -1,0 +1,18 @@
+---
+- name: Check for user ftpadmin
+  command: "docker exec pftp pure-pw show ftpadmin -f /etc/pure-ftpd/passwd/pureftpd.passwd"
+  register: result
+  ignore_errors: True
+
+- set_fact:
+    user_present: "{{ result.stdout != '' }}"
+- debug:
+    var: user_present
+
+- name: Add user ftpadmin
+  expect:
+    command: docker exec -it pftp pure-pw useradd ftpadmin -f /etc/pure-ftpd/passwd/pureftpd.passwd -m -u ftpuser -D /home/ftpusers/ftpadmin
+    responses:
+      (?i)password: "ftpadmin"
+      (?i)enter it again: "ftpadmin"
+  when: not user_present

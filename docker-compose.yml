@@ -1,17 +1,51 @@
-version: '2'
+version: '3'
 
 services:
+  # Database
+  db:
+    container_name: mysql_container
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    networks:
+      - wpsite
+  # phpmyadmin
+  phpmyadmin:
+    depends_on:
+      - db
+    container_name: phpmyadmin_container
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - '8080:80'
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: password
+    networks:
+      - wpsite
+  # Wordpress
   wordpress:
+    depends_on:
+      - db
+    container_name: wordpress_container
     image: wordpress:5.0.0
     ports:
-      - 8080:80
+      - '8000:80'
+    restart: always
+    volumes: ['./:/var/www/html']
     environment:
-      WORDPRESS_DB_PASSWORD: example
-    entrypoint:
-      - /bin/sh
-      - -c
-      - (sleep 5; echo "define('WP_AUTO_UPDATE_CORE', false);" >> /var/www/html/wp-config.php) & docker-entrypoint.sh apache2-foreground
-  mysql:
-    image: mariadb
-    environment:
-      MYSQL_ROOT_PASSWORD: example
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+    networks:
+      - wpsite
+networks:
+  wpsite:
+volumes:
+  db_data:

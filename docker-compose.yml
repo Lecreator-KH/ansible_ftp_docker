@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  wordpress:
+    image: wordpress:5.0.0
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_PASSWORD: example
+    entrypoint:
+      - /bin/sh
+      - -c
+      - (sleep 5; echo "define('WP_AUTO_UPDATE_CORE', false);" >> /var/www/html/wp-config.php) & docker-entrypoint.sh apache2-foreground
+  mysql:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: example

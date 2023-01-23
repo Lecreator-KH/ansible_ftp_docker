@@ -1,0 +1,26 @@
+---
+- hosts: all
+  tasks:
+  
+  - name: Start the docker service
+    docker_container:
+      name: pftp
+      state: started
+
+  - name: Get a test file
+    command: wget www.google.co.nz -O /tmp/test.txt
+  
+  - name: Try connect to the ftp server within the docker
+    expect:
+      command: ftp -p ftpadmin@localhost 21
+      responses:
+        (?i)password: "ftpadmin"
+        'ftp>': "exit"
+  
+  - name: Put a file in ftp server
+    shell:
+      cmd: "ftp -u ftp://ftpadmin:ftpadmin@localhost/test.txt /tmp/test.txt"
+
+  - name: Get the file in the ftp server
+    shell:
+      cmd: wget ftp://ftpadmin:ftpadmin@localhost/test.txt -O /tmp/get.txt
